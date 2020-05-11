@@ -3,49 +3,49 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/</loc>
+    <loc>http://localhost/</loc>
     <lastmod>2017-11-04T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/</loc>
+    <loc>http://localhost/post/</loc>
     <lastmod>2017-11-04T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/2017/11/03/hello-world/</loc>
+    <loc>http://localhost/2017/11/03/hello-world/</loc>
     <lastmod>2017-11-04T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/search/placeholder/</loc>
+    <loc>http://localhost/search/placeholder/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/top/about/</loc>
+    <loc>http://localhost/top/about/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/top/books/</loc>
+    <loc>http://localhost/top/books/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/categories/</loc>
+    <loc>http://localhost/categories/</loc>
   </url>
   
   <url>
-    <loc>/search/</loc>
+    <loc>http://localhost/search/</loc>
   </url>
   
   <url>
-    <loc>/tags/</loc>
+    <loc>http://localhost/tags/</loc>
   </url>
   
   <url>
-    <loc>/top/</loc>
+    <loc>http://localhost/top/</loc>
   </url>
   
 </urlset>

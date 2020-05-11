@@ -10,8 +10,8 @@
     <meta property="og:type" content="article">
 
     
-    <meta property="og:image" content="//img/home-bg-jeep.jpg">
-    <meta property="twitter:image" content="//img/home-bg-jeep.jpg" />
+    <meta property="og:image" content="http://localhost/img/home-bg-jeep.jpg">
+    <meta property="twitter:image" content="http://localhost/img/home-bg-jeep.jpg" />
     
 
     
@@ -229,6 +229,25 @@
                 
 
                 
+                
+
+                
+                
+                <div id="git-comments"></div>
+                <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+                <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+                <script>
+                var gitment = new Gitment({
+                    id: '',  
+                    owner: '你的 GitHub ID',
+                    repo: 'Blog-Comments',
+                    oauth: {
+                    client_id: 'b424eca02d3fbc93d245',
+                    client_secret: 'c059501056998d07b1fcc22e40ddb19ce3220e82',
+                    }
+                })
+                gitment.render('git-comments')
+                </script>
                 
             </div>
         </div>
