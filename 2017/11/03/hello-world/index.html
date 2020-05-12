@@ -10,8 +10,8 @@
     <meta property="og:type" content="article">
 
     
-    <meta property="og:image" content="https://dengbzh.github.io//img/home-bg-jeep.jpg">
-    <meta property="twitter:image" content="https://dengbzh.github.io//img/home-bg-jeep.jpg" />
+    <meta property="og:image" content="https://dengbzh.github.io//">
+    <meta property="twitter:image" content="https://dengbzh.github.io//" />
     
 
     
@@ -21,9 +21,9 @@
     
 
     
-    <meta name="description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。">
-    <meta property="og:description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。" />
-    <meta property="twitter:description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。" />
+    <meta name="description" content="">
+    <meta property="og:description" content="" />
+    <meta property="twitter:description" content="" />
     
 
     
@@ -31,10 +31,10 @@
     
     
 
-    <meta name="keyword"  content="Mark, 中台, 高并发, 分布式,  Blog, 博客, 个人网站, 互联网, Web, 云原生, PaaS, Istio, Kubernetes, 微服务, Microservice">
+    <meta name="keyword"  content="">
     <link rel="shortcut icon" href="/img/favicon.ico">
 
-    <title>Welcome to Mark Blog-Mark的博客 | Mark&#39;s Blog</title>
+    <title>Welcome to Mark Blog-</title>
 
     <link rel="canonical" href="/2017/11/03/hello-world/">
 
@@ -99,10 +99,6 @@
                     
 		    
 
-                    
-		    <li>
-                        <a href="/search">SEARCH <img src="/img/search.png" height="15" style="cursor: pointer;" alt="Search"></a>
-		    </li>
                     
                 </ul>
             </div>
@@ -232,37 +228,34 @@
 
                 
                 
-                <section>
-                    <hr class="hidden-sm hidden-xs">
-                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
-                    <div class="tags">
-                        
-                        
-                    </div>
-                </section>
-                
 
                 
                 
 
                 
                 
-                <div id="git-comments"></div>
-                <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
-                <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
-                <script>
-                var gitment = new Gitment({
-                    id: '',  
-                    owner: 'dengbzh',
-                    repo: 'Blog-Comments',
-                    oauth: {
-                    client_id: 'b424eca02d3fbc93d245',
-                    client_secret: 'c059501056998d07b1fcc22e40ddb19ce3220e82',
-                    }
-                })
-                gitment.render('git-comments')
-                </script>
-                
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'b424eca02d3fbc93d245',
+    clientSecret: 'c059501056998d07b1fcc22e40ddb19ce3220e82',
+    repo: 'Blog-Comments',
+    owner: 'dengbzh',
+    admin: ['dengbzh'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
             </div>
         </div>
     </div>
