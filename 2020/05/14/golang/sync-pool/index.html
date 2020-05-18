@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Mark&#39;s Blog">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="https://dengbzh.github.io/img/post-bg-unix-linux.jpg">
+    <meta property="twitter:image" content="https://dengbzh.github.io/img/post-bg-unix-linux.jpg" />
+    
+
+    
+    <meta name="title" content="golang包分析 - sync.Pool" />
+    <meta property="og:title" content="golang包分析 - sync.Pool" />
+    <meta property="twitter:title" content="golang包分析 - sync.Pool" />
+    
+
+    
+    <meta name="description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。">
+    <meta property="og:description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。" />
+    <meta property="twitter:description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。" />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="Mark, 中台, 高并发, 分布式,  Blog, 博客, 个人网站, 互联网, Web, 云原生, PaaS, Istio, Kubernetes, 微服务, Microservice">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>golang包分析 - sync.Pool-Mark的博客 | Mark&#39;s Blog</title>
+
+    <link rel="canonical" href="/2020/05/14/golang/sync-Pool/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+	
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+    
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    
+    
+
+    
+    
+    <script src="/js/jquery.min.js"></script>
+    
+    
+    <script src="/js/bootstrap.min.js"></script>
+    
+    
+    <script src="/js/hux-blog.min.js"></script>
+
+    
+    
+</head>
+
+
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Mark&#39;s Blog</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                        
+                        <li>
+                            <a href="/categories/golang">golang</a>
+                        </li>
+                        
+                    
+                    
+		    
+
+                    
+		    <li>
+                        <a href="/search">SEARCH <img src="/img/search.png" height="15" style="cursor: pointer;" alt="Search"></a>
+		    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/post-bg-unix-linux.jpg')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/sync.pool" title="sync.Pool">
+                            sync.Pool
+                        </a>
+                        
+                        <a class="tag" href="/tags/golang" title="golang">
+                            golang
+                        </a>
+                        
+                    </div>
+                    <h1>golang包分析 - sync.Pool</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by 
+                        
+                                 Mark
+                         
+                        on 
+                        Thursday, May 14, 2020
+                        
+                        
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-11 col-lg-offset-1
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <header>
+                    <h2>TOC</h2>
+                </header>
+                <nav id="TableOfContents">
+<ul>
+<li><a href="#使用场景">使用场景</a></li>
+<li><a href="#实验测试">实验测试</a>
+<ul>
+<li><a href="#实现设计">实现设计</a>
+<ul>
+<li><a href="#实验指标">实验指标</a></li>
+<li><a href="#开始实验">开始实验</a>
+<ul>
+<li><a href="#实验一-不用sync-pool">实验一、不用sync.Pool</a></li>
+<li><a href="#实验二-使用sync-pool">实验二、使用sync.Pool</a></li>
+</ul></li>
+<li><a href="#实验结论">实验结论</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#原理-代码分析">原理&amp;代码分析</a>
+<ul>
+<li><a href="#pool的存储结构">Pool的存储结构</a></li>
+<li><a href="#pool基本数据结构">Pool基本数据结构</a></li>
+<li><a href="#pool执行流程">Pool执行流程</a></li>
+<li><a href="#pool生命周期">Pool生命周期</a></li>
+</ul></li>
+<li><a href="#总结">总结</a></li>
+<li><a href="#refrence">Refrence</a></li>
+</ul>
+</nav>
+                
+                
+
+<blockquote>
+<p>在工程实践中，我们经常会使用临时对象来缓存数据，当这些调用变得频繁以后，就会出现性能问题，一般会表现为，平均响应时间变短。长尾增多。并随着压力增加会不断恶化，通常针对这类场景，我们会研发一个临时对象缓存来减少系统的内存分配以及GC从而提升程序整体性能。针对此类场景golang也在go1.3版本推出了官方包用作通用解决方案。本文将会从使用场景，实验测试，原理分析，代码分析来解读这一工具。</p>
+
+<p>本文基于go1.13</p>
+</blockquote>
+
+<h1 id="使用场景">使用场景</h1>
+
+<p>根据<code>sync.Pool</code>的官方介绍<a href="#refer-go-org-pkg-sync"><sup>[1]</sup></a>。
+* <code>sync.Pool</code>是一个用于存储临时对象的工具，缓存在<code>sync.Pool</code>中的对象会被系统回收，并且不会告知使用方，如果这个对象仅仅在Pool中被引用的话，则会被GC。
+* 同一个Pool可以在多个go携程中并发使用。</p>
+
+<h1 id="实验测试">实验测试</h1>
+
+<p>通过官方的描述，我们可以知道<code>sync.Pool</code>是用于存放临时对象，并且是thread-safe的。通过重用临时对象达到减少GC提升程序性能的目的。</p>
+
+<h2 id="实现设计">实现设计</h2>
+
+<h3 id="实验指标">实验指标</h3>
+
+<p>直观上来说，我们可以通过不断使用临时变量的方式对比测试其开销。预期的现象是，使用<code>sync.Pool</code>的程序应该耗时比较低，并且为了证明耗时是由GC引入的，我们可以统计实验过程中gc次数来印证。因此实现指标应为：</p>
+
+<ul>
+<li>程序耗时</li>
+<li>GC耗时</li>
+<li>程序长尾</li>
+</ul>
+
+<h3 id="开始实验">开始实验</h3>
+
+<div id="refer-experiment-1"></div>
+
+<h4 id="实验一-不用sync-pool">实验一、不用sync.Pool</h4>
+
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;time&quot;
+    &quot;os&quot;
+    &quot;runtime/trace&quot;
+)
+
+const (
+    outter_loop = 1000000
+    inner_loop = 2000
+)
+
+func genMsg(n int) []byte {
+    msg := make([]byte, 10240)
+    for i := range msg {
+        msg[i] = byte(n)
+    }
+    return msg
+}
+
+func doSomeWork(buffer []byte) (elapsed time.Duration) {
+    start := time.Now()
+    for i:=0; i&lt;inner_loop; i++ {
+        // do some work
+    }
+    return time.Since(start)
+}
+
+func main() {
+    f, _ := os.Create(&quot;trace_withoutPool.out&quot;)
+    defer f.Close()
+    trace.Start(f)
+    defer trace.Stop()
+    var worst time.Duration
+    for i:=0; i&lt;outter_loop; i++ {
+        msg := genMsg(i)
+        elapsed := doSomeWork(msg)
+        if elapsed &gt; worst {
+            worst = elapsed
+        }
+    }
+    fmt.Println(&quot;Worst time: &quot;, worst)
+}
+</code></pre>
+
+<div id="refer-experiment-2"></div>
+
+<h4 id="实验二-使用sync-pool">实验二、使用sync.Pool</h4>
+
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;time&quot;
+    &quot;sync&quot;
+    &quot;os&quot;
+    &quot;runtime/trace&quot;
+)
+
+const (
+    outter_loop = 999999
+    inner_loop = 2000
+)
+
+var msgPool = sync.Pool{
+    New: func() interface{} {
+        return make([]byte, 10240)
+    },
+}
+
+func genMsg(n int) []byte {
+    msg := msgPool.Get().([]byte)
+    for i := range msg {
+        msg[i] = byte(n)
+    }
+    return msg
+}
+
+func doSomeWork(buffer []byte) (elapsed time.Duration) {
+    start := time.Now()
+    for i:=0; i&lt;inner_loop; i++ {
+        // do some work
+    }
+    msgPool.Put(buffer)
+    return time.Since(start)
+}
+
+func main() {
+    f, _ := os.Create(&quot;trace_withPool.out&quot;)
+    defer f.Close()
+    trace.Start(f)
+    defer trace.Stop()
+    var worst time.Duration
+    for i:=0; i&lt;outter_loop; i++ {
+        msg := genMsg(i)
+        elapsed := doSomeWork(msg)
+        if elapsed &gt; worst {
+            worst = elapsed
+        }
+    }
+    fmt.Println(&quot;Worst time: &quot;, worst)
+}
+</code></pre>
+
+<h3 id="实验结论">实验结论</h3>
+
+<p>没有使用Pool的情况如下:</p>
+
+<p><img src="/img/sync-pool/without_Pool.png" alt="withoutPool" />
+Worst time:  635.826µs</p>
+
+<p>使用了Pool情况</p>
+
+<p><img src="/img/sync-pool/with_Pool.png" alt="withoutPool" /></p>
+
+<p>Worst time:  285.427µs</p>
+
+<p>通过实验，我们可以看到程序耗时、长尾、gc时间在使用sync.Pool以后都减少了。因此使用<code>sync.Pool</code>是大有裨益的。</p>
+
+<h1 id="原理-代码分析">原理&amp;代码分析</h1>
+
+<p><code>sync.Pool</code> 包含Get和Put两个方法。其中Put方法会将临时对象放入缓存中。Get方法将从缓存中取出临时对象。当没有临时对象的时候，将会通过New方法生成一个临时对象。函数签名如下：</p>
+
+<pre><code class="language-go">type Pool struct {
+
+    // New optionally specifies a function to generate
+    // a value when Get would otherwise return nil.
+    // It may not be changed concurrently with calls to Get.
+    New func() interface{}
+    // contains filtered or unexported fields
+}
+
+func (p *Pool) Get() interface{}
+
+func (p *Pool) Put(x interface{})
+
+</code></pre>
+
+<p>从函数签名我们也可以看出在创建一个Pool时候，我们需要提供一个New方法。这就是Pool创建临时对象的方法。那么Pool是如何存储和管理这些对象呢？</p>
+
+<div id="refer-pool-arch-simple-pic"></div>
+
+<h2 id="pool的存储结构">Pool的存储结构</h2>
+
+<p>下图简单描绘了Pool的整体结构，其中简化了一些结构。但是不影响对其存储的分析：</p>
+
+<p><img src="/img/sync-pool/sync-arch-simple.png" alt="pool-arch-simple" /></p>
+
+<p>Pool通过allPools[]*和oldPools[]*来引用程序中所有的Pool并且对其进行生命周期管理。管理策略后面介绍。allPools中会引用到我们创建的Pool(如<a href="#refer-experiment-2">实验二</a>中的<code>msgPool</code>)</p>
+
+<h2 id="pool基本数据结构">Pool基本数据结构</h2>
+
+<p>Pool<a href="#refer-github-sync-src-pool"><sup>[2]</sup></a>包含了local, localSize, victim, victimSize, New。分别如下含义：</p>
+
+<pre><code class="language-go">type Pool struct {
+	noCopy noCopy//禁止被复制，也就是说是全局唯一的。
+
+	local     unsafe.Pointer // 本地缓存，长度和P数量一致，指向实际类型为poolLocal的slice，每一个slice表示当前P对应的缓存
+	localSize uintptr        // 表示的是当前缓存的大小（可以理解为最大偏移量）
+
+	victim     unsafe.Pointer // 上一个GC周期的local对象
+	victimSize uintptr        // 上一个GC周期的local对象的缓存大小
+
+	//当调用Get方法的返回值是nil，会调用该方法，生成对象。这个方法在调用Get的时候是不能改变的。
+	New func() interface{}
+}
+
+
+
+type poolLocalInternal struct {
+	private interface{} // 每一个P都存在一个私有对象
+	shared  poolChain   // 每一个P都会存在一个共享对象，Local P 可以 pushHead/popHead; 其他P P 可以 popTail.
+}
+
+// Pool.local真正引用的对象
+type poolLocal struct {
+	poolLocalInternal
+
+	// pad保证pollLocal对象占用的都是cache line大小(128)的整数倍。
+	pad [128 - unsafe.Sizeof(poolLocalInternal{})%128]byte
+}
+</code></pre>
+
+<ul>
+<li>Pool 内嵌一个noCopy使得每一个对象都是全局唯一的</li>
+<li>Pool中的local表示当前的P（参考goroutine调度<a href="#refer-blog-go-routine"><sup>[6]</sup></a>）使用的缓存，因此local是一个长度为<code>runtime.GOMAXPROCS[0]</code>大小的数组。数组中的对象为poolLocalInternal的指针</li>
+<li>poolLocalInternal包含private和shared对象，private对象是本地P访问的，如果本地private对象为nil，则可以去其他P&rdquo;偷&rdquo;取shared对象。没有成功则会尝试用victim字段进行获取</li>
+<li>shared对象是<code>poolChain</code>类型的一个双向链表，该链表是基于无锁队列进行封装。</li>
+<li>poolLocal就是对poolLocalInternal的padding。poolLocal占满整个缓存防止false sharing<a href="#refer-wikipedia-false-sharing"><sup>[4]</sub></a></li>
+</ul>
+
+<h2 id="pool执行流程">Pool执行流程</h2>
+
+<p>Pool的整体数据结构如上，由于Pool只存在连个方法，<code>Get</code>和<code>Put</code>，因此，可以从这两个方法入手研究Pool的执行流程。</p>
+
+<p>Get流程（为了整个过程清晰删除部分race相关代码:</p>
+
+<pre><code class="language-go">func (p *Pool) Get() interface{} {
+	// ...
+	l, pid := p.pin()
+	x := l.private
+	l.private = nil
+	if x == nil {
+		// Try to pop the head of the local shard. We prefer
+		// the head over the tail for temporal locality of
+		// reuse.
+		x, _ = l.shared.popHead()
+		if x == nil {
+			x = p.getSlow(pid)
+		}
+    }
+    //解除非抢占
+	runtime_procUnpin()
+	//...
+	if x == nil &amp;&amp; p.New != nil {
+		x = p.New()
+	}
+	return x
+}
+
+</code></pre>
+
+<p><code>Get</code>方法的整体流程还是比较清晰的：</p>
+
+<p>1、先通过<code>p.pin()</code>方法拿到当前P对应的<code>poolLocal</code>对象和pid<br>
+2、从<code>poolLocal</code>中获取private对象，如果private对象为nil，则从shared对象中取出，如果shared里面没有，则从其他P的shared对象中『偷』<br>
+3、通过<code>runtime_procPin</code>解除非抢占。（这是由于在前面几行中会执行<code>runtime_procPin</code>，用于排除抢占。也就是说从这个P上面获取<code>poolLocal</code>对象是并发安全的）<br>
+4、如果最后还是没有缓存对象，则使用<code>p.New()</code>方法创建一个对象返回。这里我们可以看到没有对<code>New</code>的执行进行同步控制，所以运行时更改<code>New</code>方法不是并发安全的</p>
+
+<p>这里需要特别说明的是，每一个<code>poolLocal</code>对象都对应了一个P，这样做的好处是，不同P在使用<code>Pool</code>的private数据时候，不需要加锁，因为不同P之间的private数据没有争用。同一个P由于禁止抢占，也不会有争用问题。</p>
+
+<pre><code class="language-go">func (p *Pool) pin() (*poolLocal, int) {
+    // 禁止抢占
+	pid := runtime_procPin()
+    // 获取local队列长度
+	s := atomic.LoadUintptr(&amp;p.localSize) // load-acquire
+	l := p.local                          // load-consume
+	if uintptr(pid) &lt; s { // 如果pid小于队列长度，则代表已经进行初始化，可以直接返回
+		return indexLocal(l, pid), pid
+    }
+    // 否则进行初始化
+	return p.pinSlow()
+}
+
+func indexLocal(l unsafe.Pointer, i int) *poolLocal {
+	lp := unsafe.Pointer(uintptr(l) + uintptr(i)*unsafe.Sizeof(poolLocal{}))
+	return (*poolLocal)(lp)
+}
+
+func (p *Pool) pinSlow() (*poolLocal, int) {
+    // 这里需要解除非抢占
+    // 如果不解除，使用allPoolsMu.Lock()加锁被hang住，则整个P都被hang住
+	runtime_procUnpin()
+	allPoolsMu.Lock()
+    defer allPoolsMu.Unlock()
+    // 重新开启非抢占
+	pid := runtime_procPin()
+	// 由于刚才解除了非抢占，所以需要重新检查一下状态
+	s := p.localSize
+	l := p.local
+	if uintptr(pid) &lt; s {
+		return indexLocal(l, pid), pid
+	}
+	if p.local == nil {
+		allPools = append(allPools, p)
+	}
+	// 如果运行时P数量变化了。这里会重新分配内存
+	size := runtime.GOMAXPROCS(0)
+	local := make([]poolLocal, size)
+	atomic.StorePointer(&amp;p.local, unsafe.Pointer(&amp;local[0])) // store-release
+	atomic.StoreUintptr(&amp;p.localSize, uintptr(size))         // store-release
+	return &amp;local[pid], pid
+}
+
+</code></pre>
+
+<p>上面的代码详细描述了<code>pin()</code>这个方法。</p>
+
+<p>1、使用<code>runtime_procPin</code>禁止抢占，获取localSize和local，如果没有初始化则localSize为nil, 否则应该和p的数量相等<br>
+2、如果pid在localSize范围内，则直接根据localSize返回对应的<code>poolLocal</code>对象，这也解释了为什么使用指针来表示local的大小。因为是通过偏移量的方式求的的<code>poolLocal</code>对象<br>
+3、如果pid不在localSize范围内，则表示没有进行初始化，或者运行时增加了P的数量。此时需要重新分配local内存（<code>pingSlow()</code>)<br>
+4、<code>pingSlow()</code>第一步解除非抢占，这一步的目的是防止使用allPoolsMu.Lock()加锁被阻塞，导致整个P被阻塞<br>
+5、<code>allPools</code>根据<a href="#refer-pool-arch-simple-pic">Pool的架构</a>，allPools存储的是全局所有的Pool实例，因此需要进行加锁。这里也可以看出，如果一致没有命中缓存会导致频繁加锁，频繁加锁会导致Pool性能问题<br>
+6、获取锁以后，需要重新检查一下状态（因为在强锁过程中，可能有其他P或者G创建了）<br>
+7、创建local数组<br></p>
+
+<p>Put流程（为了整个过程清晰删除部分race相关代码）</p>
+
+<pre><code class="language-go">
+// Put adds x to the pool.
+func (p *Pool) Put(x interface{}) {
+	if x == nil {
+		return
+    }
+    //...
+	l, _ := p.pin()
+	if l.private == nil {
+		l.private = x
+		x = nil
+	}
+	if x != nil {
+		l.shared.pushHead(x)
+	}
+    runtime_procUnpin()
+    // ...
+}
+
+</code></pre>
+
+<p><code>Put()</code>整个过程比Get要稍微简单一些
+1、通过<code>pin()</code>方法，获取当前的P对应的<code>poolLocal</code>对象。
+2、如果private为空，将x放入private字段，否则放入shared字段。
+3、解除非抢占</p>
+
+<p>通过上面的分析，可以得到<code>sync.Pool</code>的工作流图<a href="#refer-blog-understand-design-of-sync-pool"><sup>[7]</sup></a>
+<img src="/img/sync-pool/sync-pool-workflow.png" alt="sync-pool-work-flow" /></p>
+
+<h2 id="pool生命周期">Pool生命周期</h2>
+
+<p>在<code>sync.Pool</code>的官方包中，说明了<code>sync.Pool</code>会在不通知用户的情况下清除这个缓存。这个设计是保证Pool不会无限膨胀，那么这些数据到底是什么时候清除呢？这个涉及GC和<code>sync.Pool</code>的victim设计。
+GC的方法这里不赘述，需要特别指出的是，在<code>sync.Pool</code>的<code>init()</code>方法中有这样一个设计：</p>
+
+<pre><code class="language-go">func init() {
+	runtime_registerPoolCleanup(poolCleanup)
+}
+// Implemented in runtime.
+func runtime_registerPoolCleanup(cleanup func())
+func runtime_procPin() int
+func runtime_procUnpin()
+</code></pre>
+
+<p>在<code>init()</code>方法中，完成了<code>sync.Pool</code>GC的注册。在运行时（准确来说是GC发生时）会执行<code>poolCleanup()</code>这个hook（在STW阶段调用）。（关于<code>runtime_xxx()</code>这种引用方式可以简单说明下，go语言是通过首字母大小写的方式导出的本地方法，不过也有一些hack的方式，比如<code>sync.Pool</code>包中，声明了一个函数符号，在函数实现方可以使用<code>//go:linkname xxx xxx</code>，可将这个符号和实现链接起来，在工程实现上几乎用不到这类case，了解存在这些规则即可）</p>
+
+<p>下面我们可以仔细看下<code>poolCleanup()</code>这个函数。</p>
+
+<pre><code class="language-go">func poolCleanup() {
+
+	// Drop victim caches from all pools.
+	for _, p := range oldPools {
+		p.victim = nil
+		p.victimSize = 0
+	}
+
+	// Move primary cache to victim cache.
+	for _, p := range allPools {
+		p.victim = p.local
+		p.victimSize = p.localSize
+		p.local = nil
+		p.localSize = 0
+	}
+
+	// The pools with non-empty primary caches now have non-empty
+	// victim caches and no pools have primary caches.
+	oldPools, allPools = allPools, nil
+}
+
+</code></pre>
+
+<p>整个功能实现是比较简单的。</p>
+
+<p>1、将oldPools中的victim清空<br>
+2、将allPools中的local更新到victim<br>
+3、将allPools变为oldPools<br></p>
+
+<p>对比go1.12的代码更容易看出引入这个victim设计的原因：</p>
+
+<pre><code class="language-go">func poolCleanup() {
+	// This function is called with the world stopped, at the beginning of a garbage collection.
+	// It must not allocate and probably should not call any runtime functions.
+	// Defensively zero out everything, 2 reasons:
+	// 1. To prevent false retention of whole Pools.
+	// 2. If GC happens while a goroutine works with l.shared in Put/Get,
+	//    it will retain whole Pool. So next cycle memory consumption would be doubled.
+	for i, p := range allPools {
+		allPools[i] = nil
+		for i := 0; i &lt; int(p.localSize); i++ {
+			l := indexLocal(p.local, i)
+			l.private = nil
+			for j := range l.shared {
+				l.shared[j] = nil
+			}
+			l.shared = nil
+		}
+		p.local = nil
+		p.localSize = 0
+	}
+	allPools = []*Pool{}
+}
+
+</code></pre>
+
+<p>通过对比，可以看出其实victim会滞留一些待GC的对象。相当于降低了GC时候清理内存的数量。加倍了缓存对象的生命周期。只有在两次GC之间没有Get的对象，才会被GC。</p>
+
+<h1 id="总结">总结</h1>
+
+<p><code>sync.Pool</code>代码不多。通过阅读官方文档，通读代码。以及源码注释。可以了解<code>sync.Pool</code>的使用方法。通过自己写demo的方式可以验证其用法，以及优势。总结如下：</p>
+
+<p>1、在创建临时对象的时候，使用<code>sync.Pool</code>可以减少GC，从而提升程序性能<br>
+2、<code>sync.Pool</code>是协程并发安全的。是通过每一个P分配一个缓存，同一个P打开禁止调度实现的。<br>
+3、<code>sync.Pool</code>每次<code>Put</code>和<code>Get</code>会先获取当前缓存的private对象，如果不存在通过shared对象从其他P偷取，如果其他P也没有则通过victim对象获取。<br>
+4、运行时如果增加P的数量，缓存会进行重新分配。<br>
+5、每一个Pool对象都是内嵌了noCopy，是全局唯一的。<br>
+7、pool中的数据如果在两个GC周期没有进行<code>Get</code>操作，则会被清除。因此不要对pool中的对象做存在性假设。<br>
+8、shared对象使用的是无锁队列，这部分代码对于学习无锁队列和dqueue都大有裨益。</p>
+
+<h1 id="refrence">Refrence</h1>
+
+<div id="refer-go-org-pkg-sync"></div>
+
+<ul>
+<li><p>[1] <a href="https://golang.org/pkg/sync/#Pool">sync.Pool包官方文档</a>
+<div id="refer-github-sync-src-pool"></div></p></li>
+
+<li><p>[2] <a href="https://github.com/golang/go/blob/release-branch.go1.13/src/sync/pool.go">sync.Pool pool release-1.13 源代码</a>
+<div id="refer-github-sync-src-poolqueue"></div></p></li>
+
+<li><p>[3] <a href="https://github.com/golang/go/blob/release-branch.go1.13/src/sync/poolqueue.go">sync.Pool poolqueue release-1.13 源代码</a>
+<div id="refer-wikipedia-false-sharing"></div></p></li>
+
+<li><p>[4] <a href="https://en.wikipedia.org/wiki/False_sharing">false sharing wikipedia</a></p></li>
+
+<li><p>[5] <a href="https://juejin.im/post/5d4087276fb9a06adb7fbe4a">由浅入深聊聊Golang的sync.Pool</a>
+<div id="refer-blog-go-routine"></div></p></li>
+
+<li><p>[6] <a href="https://blog.csdn.net/u011957758/article/details/83018425">关于goroutine的一些小理解</a>
+<div id="refer-blog-understand-design-of-sync-pool"></div></p></li>
+
+<li><p>[7] <a href="https://medium.com/a-journey-with-go/go-understand-the-design-of-sync-pool-2dde3024e277">Go: Understand the Design of Sync.Pool</a></p></li>
+
+<li><p>[8] <a href="https://juejin.im/post/5d4087276fb9a06adb7fbe4a">由浅入深聊聊Golang的sync.Pool</a></p></li>
+
+<li><p>[9] <a href="https://zhuanlan.zhihu.com/p/76812714">请问sync.Pool有什么缺点？</a></p></li>
+
+<li><p>[10] <a href="https://blog.yuantops.com/tech/sync-pool-benchmark/">用Benchmark验证sync.Pool对GC latency的优化效果</a></p></li>
+
+<li><p>[11] <a href="https://www.cnblogs.com/qcrao-2018/p/12736031.html">深度解密 Go 语言之 sync.Pool</a></p></li>
+
+<li><p>[12] <a href="https://zhuanlan.zhihu.com/p/110140126">理解Go 1.13中sync.Pool的设计与实现</a></p></li>
+</ul>
+
+
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/03/hello-world/" data-toggle="tooltip" data-placement="top" title="Welcome to Mark Blog">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+
+                
+<div id="disqus-comment"></div>
+
+
+
+            </div>
+            
+            <div class="
+                col-lg-11 col-lg-offset-1
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+
+                
+                
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'b424eca02d3fbc93d245',
+    clientSecret: 'c059501056998d07b1fcc22e40ddb19ce3220e82',
+    repo: 'Blog-Comments',
+    owner: 'dengbzh',
+    admin: ['dengbzh'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                    
+                    
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+            
+            
+            
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Mark&#39;s Blog 2020
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+<script>
+    (function(){
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https'){
+       bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else{
+      bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+
+
+<script>
+    
+    var _baId = '4646b61c8b5071a27dbdac7ac69ba9da';
+
+    
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+
+</body>
+</html>

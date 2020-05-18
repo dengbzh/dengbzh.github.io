@@ -6,10 +6,19 @@
     <description>Recent content on Mark&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 04 Nov 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 14 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://dengbzh.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>golang包分析 - sync.Pool</title>
+      <link>https://dengbzh.github.io/2020/05/14/golang/sync-pool/</link>
+      <pubDate>Thu, 14 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://dengbzh.github.io/2020/05/14/golang/sync-pool/</guid>
+      <description>在工程实践中，我们经常会使用临时对象来缓存数据，当这些调用变得频繁以后，就会出现性能问题，一般会表现为，平均响应时间变短。长尾增多。并随着压</description>
+    </item>
     
     <item>
       <title>Welcome to Mark Blog</title>
