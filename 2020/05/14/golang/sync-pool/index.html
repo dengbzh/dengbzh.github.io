@@ -582,9 +582,9 @@
 <p>2、<code>sync.Pool</code>是协程并发安全的。是通过每一个P分配一个缓存，同一个P打开禁止调度实现的。</p>
 <p>3、<code>sync.Pool</code>每次<code>Put</code>和<code>Get</code>会先获取当前缓存的<code>private</code>对象，如果不存在通过<code>shared</code>对象从其他P偷取，如果其他P也没有则通过<code>victim</code>对象获取。</p>
 <p>4、运行时如果增加P的数量，缓存会进行重新分配。</p>
-<p>5、每一个<code>Pool</code>对象都是内嵌了<code>noCopy</code>，是全局唯一的。<!-- raw HTML omitted -->
-7、pool中的数据如果在两个GC周期没有进行<code>Get</code>操作，则会被清除。因此不要对pool中的对象做存在性假设。<!-- raw HTML omitted -->
-8、<code>shared</code>对象使用的是无锁队列，这部分代码对于学习无锁队列和dqueue都大有裨益。<!-- raw HTML omitted --></p>
+<p>5、每一个<code>Pool</code>对象都是内嵌了<code>noCopy</code>，是全局唯一的。</p>
+<p>7、pool中的数据如果在两个GC周期没有进行<code>Get</code>操作，则会被清除。因此不要对pool中的对象做存在性假设。</p>
+<p>8、<code>shared</code>对象使用的是无锁队列，这部分代码对于学习无锁队列和dqueue都大有裨益。</p>
 <h1 id="refrence">Refrence</h1>
 <!-- raw HTML omitted -->
 <ul>
@@ -592,12 +592,8 @@
 </ul>
 <!-- raw HTML omitted -->
 <ul>
-<li>
-<p>[2] <a href="https://github.com/golang/go/blob/release-branch.go1.13/src/sync/pool.go">sync.Pool pool release-1.13 源代码</a></p>
-</li>
-<li>
-<p>[3]<a href="https://github.com/golang/go/blob/release-branch.go1.13/src/sync/poolqueue.go">sync.Pool poolqueue release-1.13 源代码</a></p>
-</li>
+<li>[2] <a href="https://github.com/golang/go/blob/release-branch.go1.13/src/sync/pool.go">sync.Pool pool release-1.13 源代码</a></li>
+<li>[3]<a href="https://github.com/golang/go/blob/release-branch.go1.13/src/sync/poolqueue.go">sync.Pool poolqueue release-1.13 源代码</a></li>
 </ul>
 <!-- raw HTML omitted -->
 <ul>
@@ -610,24 +606,12 @@
 </ul>
 <!-- raw HTML omitted -->
 <ul>
-<li>
-<p>[7] <a href="https://medium.com/a-journey-with-go/go-understand-the-design-of-sync-pool-2dde3024e277">Go: Understand the Design of Sync.Pool</a></p>
-</li>
-<li>
-<p>[8] <a href="https://juejin.im/post/5d4087276fb9a06adb7fbe4a">由浅入深聊聊Golang的sync.Pool</a></p>
-</li>
-<li>
-<p>[9] <a href="https://zhuanlan.zhihu.com/p/76812714">请问sync.Pool有什么缺点？</a></p>
-</li>
-<li>
-<p>[10] <a href="https://blog.yuantops.com/tech/sync-pool-benchmark/">用Benchmark验证sync.Pool对GC latency的优化效果</a></p>
-</li>
-<li>
-<p>[11] <a href="https://www.cnblogs.com/qcrao-2018/p/12736031.html">深度解密 Go 语言之 sync.Pool</a></p>
-</li>
-<li>
-<p>[12] <a href="https://zhuanlan.zhihu.com/p/110140126">理解Go 1.13中sync.Pool的设计与实现</a></p>
-</li>
+<li>[7] <a href="https://medium.com/a-journey-with-go/go-understand-the-design-of-sync-pool-2dde3024e277">Go: Understand the Design of Sync.Pool</a></li>
+<li>[8] <a href="https://juejin.im/post/5d4087276fb9a06adb7fbe4a">由浅入深聊聊Golang的sync.Pool</a></li>
+<li>[9] <a href="https://zhuanlan.zhihu.com/p/76812714">请问sync.Pool有什么缺点？</a></li>
+<li>[10] <a href="https://blog.yuantops.com/tech/sync-pool-benchmark/">用Benchmark验证sync.Pool对GC latency的优化效果</a></li>
+<li>[11] <a href="https://www.cnblogs.com/qcrao-2018/p/12736031.html">深度解密 Go 语言之 sync.Pool</a></li>
+<li>[12] <a href="https://zhuanlan.zhihu.com/p/110140126">理解Go 1.13中sync.Pool的设计与实现</a></li>
 </ul>
 
 
