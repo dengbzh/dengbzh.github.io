@@ -21,16 +21,6 @@
     </item>
     
     <item>
-      <title>Welcome to Mark Blog</title>
-      <link>https://dengbzh.github.io/2017/11/03/hello-world/</link>
-      <pubDate>Sat, 04 Nov 2017 00:00:00 +0000</pubDate>
-      
-      <guid>https://dengbzh.github.io/2017/11/03/hello-world/</guid>
-      <description>  “Yeah It&amp;rsquo;s on. ”
- Hello World! </description>
-    </item>
-    
-    <item>
       <title></title>
       <link>https://dengbzh.github.io/search/placeholder/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -45,7 +35,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://dengbzh.github.io/top/about/</guid>
-      <description> To Be Continued </description>
+      <description>To Be Continued </description>
     </item>
     
     <item>
@@ -54,7 +44,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://dengbzh.github.io/top/books/</guid>
-      <description> To Be Continued </description>
+      <description>To Be Continued </description>
     </item>
     
   </channel>

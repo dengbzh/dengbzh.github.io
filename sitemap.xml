@@ -8,12 +8,12 @@
   </url>
   
   <url>
-    <loc>https://dengbzh.github.io/categories/golang/</loc>
+    <loc>https://dengbzh.github.io/tags/golang/</loc>
     <lastmod>2020-05-14T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://dengbzh.github.io/tags/golang/</loc>
+    <loc>https://dengbzh.github.io/categories/golang/</loc>
     <lastmod>2020-05-14T00:00:00+00:00</lastmod>
   </url>
   
@@ -43,23 +43,15 @@
   </url>
   
   <url>
-    <loc>https://dengbzh.github.io/2017/11/03/hello-world/</loc>
-    <lastmod>2017-11-04T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://dengbzh.github.io/search/placeholder/</loc>
-    <priority>0</priority>
   </url>
   
   <url>
     <loc>https://dengbzh.github.io/top/about/</loc>
-    <priority>0</priority>
   </url>
   
   <url>
     <loc>https://dengbzh.github.io/top/books/</loc>
-    <priority>0</priority>
   </url>
   
   <url>
