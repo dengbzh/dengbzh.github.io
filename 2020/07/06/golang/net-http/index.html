@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+    <meta property="og:site_name" content="Mark&#39;s Blog">
+    <meta property="og:type" content="article">
+
+    
+    <meta property="og:image" content="https://dengbzh.github.io/img/post-bg-unix-linux.jpg">
+    <meta property="twitter:image" content="https://dengbzh.github.io/img/post-bg-unix-linux.jpg" />
+    
+
+    
+    <meta name="title" content="golang包分析 - net.Http" />
+    <meta property="og:title" content="golang包分析 - net.Http" />
+    <meta property="twitter:title" content="golang包分析 - net.Http" />
+    
+
+    
+    <meta name="description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。">
+    <meta property="og:description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。" />
+    <meta property="twitter:description" content="Mark，中台程序员, 云原生爱好者，猫奴, 周末厨子 | 这里是 Mark 的博客，Stay Hungry Stay Foolish。" />
+    
+
+    
+    <meta property="twitter:card" content="summary" />
+    
+    
+
+    <meta name="keyword"  content="Mark, 中台, 高并发, 分布式,  Blog, 博客, 个人网站, 互联网, Web, 云原生, PaaS, Istio, Kubernetes, 微服务, Microservice">
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>golang包分析 - net.Http-Mark的博客 | Mark&#39;s Blog</title>
+
+    <link rel="canonical" href="/2020/07/06/golang/net-http/">
+
+    <link rel="stylesheet" href="/css/iDisqus.min.css"/>
+	
+    
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    
+    <link rel="stylesheet" href="/css/hux-blog.min.css">
+
+    
+    <link rel="stylesheet" href="/css/zanshang.css">
+    
+    
+    <link href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    
+    
+
+    
+    
+    <script src="/js/jquery.min.js"></script>
+    
+    
+    <script src="/js/bootstrap.min.js"></script>
+    
+    
+    <script src="/js/hux-blog.min.js"></script>
+
+    
+    
+
+</head>
+
+
+
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Mark&#39;s Blog</a>
+        </div>
+
+        
+        
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    
+                        
+                        <li>
+                            <a href="/categories/golang">golang</a>
+                        </li>
+                        
+                    
+                    
+		    
+
+                    
+		    <li>
+                        <a href="/search">SEARCH <img src="/img/search.png" height="15" style="cursor: pointer;" alt="Search"></a>
+		    </li>
+                    
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+    
+</nav>
+<script>
+    
+    
+    
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        
+            $navbar.className = " ";
+            
+            setTimeout(function(){
+                
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+
+
+<style type="text/css">
+    header.intro-header {
+        background-image: url('/img/post-bg-unix-linux.jpg')
+    }
+</style>
+<header class="intro-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <div class="post-heading">
+                    <div class="tags">
+                        
+                        <a class="tag" href="/tags/net.http" title="net.Http">
+                            net.Http
+                        </a>
+                        
+                        <a class="tag" href="/tags/golang" title="golang">
+                            golang
+                        </a>
+                        
+                    </div>
+                    <h1>golang包分析 - net.Http</h1>
+                    <h2 class="subheading"></h2>
+                    <span class="meta">
+                        Posted by 
+                        
+                                 &#34;Mark&#34;
+                         
+                        on 
+                        Monday, July 6, 2020
+                        
+                        
+                        
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+
+
+<article>
+    <div class="container">
+        <div class="row">
+
+            
+            <div class="
+                col-lg-11 col-lg-offset-1
+                col-md-10 col-md-offset-1
+                post-container">
+
+                
+                <header>
+                    <h2>TOC</h2>
+                </header>
+                <nav id="TableOfContents">
+  <ul>
+    <li><a href="#golang-webserver例子">golang webserver例子</a></li>
+    <li><a href="#http请求监听处理">http请求监听&amp;处理</a>
+      <ul>
+        <li><a href="#构造server">构造Server</a></li>
+        <li><a href="#监听端口">监听端口</a></li>
+        <li><a href="#处理请求">处理请求</a></li>
+      </ul>
+    </li>
+    <li><a href="#路由引擎">路由引擎</a>
+      <ul>
+        <li><a href="#路由注册">路由注册</a></li>
+        <li><a href="#路由">路由</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                
+                <blockquote>
+<p>golang是一个具有高效开发速度的一门语言，这不仅体现在golang自身的语言设计，同样体现在golang的包设计。<code>net.http</code>包就是golang官方库中的Http包。通过这个包，我们可以轻松构建http服务，当下热门的golang web框架均基于这个包进行开发比如：gin。本文将从比较底层的层面介绍net.http包的主要执行流程和设计。阅读这部分源代码对于web开发也是大有裨益。</p>
+</blockquote>
+<!-- raw HTML omitted -->
+<h1 id="golang-webserver例子">golang webserver例子</h1>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;net/http&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	http.<span style="color:#50fa7b">HandleFunc</span>(<span style="color:#f1fa8c">&#34;/test&#34;</span>, <span style="color:#8be9fd;font-style:italic">func</span>(w http.ResponseWriter, r <span style="color:#ff79c6">*</span>http.Request) {
+		fmt.<span style="color:#50fa7b">Fprintf</span>(w,<span style="color:#f1fa8c">&#34;hello, world&#34;</span>)
+	})
+	http.<span style="color:#50fa7b">ListenAndServe</span>(<span style="color:#f1fa8c">&#34;:8080&#34;</span>,<span style="color:#ff79c6">nil</span>)
+}
+</code></pre></div><p>这是golang简单实现一个http服务的demo，可以看到不到20行代码就能实现，这也体现出了golang开发效率。通过这个例子我们可以简单分析下golang webServer代码的设计流程：</p>
+<p>1、设计对应路由的handler，这里也就是指的通过<code>http.HanleFunc</code>为路由绑定一个执行方法。</p>
+<p>2、使用<code>http.ListenAndServe</code>启动服务。</p>
+<p>通过上面代码分析，我们可以很清晰了解<code>net.http</code>包的设计逻辑，将路由和server逻辑解耦，<code>http.ListenAndServe</code>负责处理监听，请求接收，请求分发。<code>http.HanleFunc</code>负责路由逻辑处理。下面本文将按照这两个方向根据源代码阐述<code>http.net</code>设计。并且说明二者是如何相互配合处理用户请求，最后结合gin框架，说明如何自定义一个路由引擎。</p>
+<h1 id="http请求监听处理">http请求监听&amp;处理</h1>
+<h2 id="构造server">构造Server</h2>
+<p>golang 处理http请求就靠<code>http.ListenAndServe</code>方法。这也是golang开发效率的体现。这个函数具体内容如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// ListenAndServe listens on the TCP network address addr and then calls
+</span><span style="color:#6272a4">// Serve with handler to handle requests on incoming connections.
+</span><span style="color:#6272a4">// Accepted connections are configured to enable TCP keep-alives.
+</span><span style="color:#6272a4">//
+</span><span style="color:#6272a4">// The handler is typically nil, in which case the DefaultServeMux is used.
+</span><span style="color:#6272a4">//
+</span><span style="color:#6272a4">// ListenAndServe always returns a non-nil error.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">ListenAndServe</span>(addr <span style="color:#8be9fd">string</span>, handler Handler) <span style="color:#8be9fd">error</span> {
+	server <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&amp;</span>Server{Addr: addr, Handler: handler}
+	<span style="color:#ff79c6">return</span> server.<span style="color:#50fa7b">ListenAndServe</span>()
+}
+
+</code></pre></div><p>在官方注释中已经说的比较清晰了，<code>ListenAndServe</code>这个方法比较简单，就是构造了<code>Server</code>，并且调用了<code>server</code>的<code>ListenAndServe</code>,用于监听tcp地址，然后通过handler进行回调处理。如果这个handler是<code>nil</code>，也就是我们例子中的情况，则会使用默认的handler，也就是<code>DefaultServeMux</code>。这个设计可以让我们自身定制路由。因为原生的路由设计是比较简单的。关于路由和handler，我们后面会进行介绍。</p>
+<h2 id="监听端口">监听端口</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// ListenAndServe listens on the TCP network address srv.Addr and then
+</span><span style="color:#6272a4">// calls Serve to handle requests on incoming connections.
+</span><span style="color:#6272a4">// Accepted connections are configured to enable TCP keep-alives.
+</span><span style="color:#6272a4">//
+</span><span style="color:#6272a4">// If srv.Addr is blank, &#34;:http&#34; is used.
+</span><span style="color:#6272a4">//
+</span><span style="color:#6272a4">// ListenAndServe always returns a non-nil error. After Shutdown or Close,
+</span><span style="color:#6272a4">// the returned error is ErrServerClosed.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> (srv <span style="color:#ff79c6">*</span>Server) <span style="color:#50fa7b">ListenAndServe</span>() <span style="color:#8be9fd">error</span> {
+	<span style="color:#ff79c6">if</span> srv.<span style="color:#50fa7b">shuttingDown</span>() {
+		<span style="color:#ff79c6">return</span> ErrServerClosed
+	}
+	addr <span style="color:#ff79c6">:=</span> srv.Addr
+	<span style="color:#ff79c6">if</span> addr <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;&#34;</span> {
+		addr = <span style="color:#f1fa8c">&#34;:http&#34;</span>
+	}
+	ln, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">Listen</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addr)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		<span style="color:#ff79c6">return</span> err
+	}
+	<span style="color:#ff79c6">return</span> srv.<span style="color:#50fa7b">Serve</span>(ln)
+}
+
+</code></pre></div><p><code>Server</code>其实就是一个web服务处理连接的抽象，<code>ListenAndServe</code>也就做了这几件事儿：</p>
+<p>1、<code>Listen</code>监听tcp端口: 这个没有什么好说的，就是根据协议，监听端口</p>
+<p>2、<code>Serve</code>处理这个连接：这个就是server的核心处理逻辑，也是一个典型的处理模型，监听端口-&gt;接口连接-&gt;处理连接。下面我们结合代码进行分析（非核心代码进行删减）。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#8be9fd;font-style:italic">func</span> (srv <span style="color:#ff79c6">*</span>Server) <span style="color:#50fa7b">Serve</span>(l net.Listener) <span style="color:#8be9fd">error</span> {
+	<span style="color:#6272a4">//..
+</span><span style="color:#6272a4"></span>
+	baseCtx <span style="color:#ff79c6">:=</span> context.<span style="color:#50fa7b">Background</span>()
+	<span style="color:#6272a4">// ...
+</span><span style="color:#6272a4"></span>
+	<span style="color:#8be9fd;font-style:italic">var</span> tempDelay time.Duration <span style="color:#6272a4">// how long to sleep on accept failure
+</span><span style="color:#6272a4"></span>
+	ctx <span style="color:#ff79c6">:=</span> context.<span style="color:#50fa7b">WithValue</span>(baseCtx, ServerContextKey, srv)
+	<span style="color:#ff79c6">for</span> {
+		<span style="color:#6272a4">//接收连接
+</span><span style="color:#6272a4"></span>		rw, err <span style="color:#ff79c6">:=</span> l.<span style="color:#50fa7b">Accept</span>()
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			<span style="color:#6272a4">//处理异常和重试
+</span><span style="color:#6272a4"></span>			
+		}
+		connCtx <span style="color:#ff79c6">:=</span> ctx
+		<span style="color:#6272a4">//如果有需求可以修改ctx
+</span><span style="color:#6272a4"></span>		<span style="color:#ff79c6">if</span> cc <span style="color:#ff79c6">:=</span> srv.ConnContext; cc <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			connCtx = <span style="color:#50fa7b">cc</span>(connCtx, rw)
+			<span style="color:#ff79c6">if</span> connCtx <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+				<span style="color:#8be9fd;font-style:italic">panic</span>(<span style="color:#f1fa8c">&#34;ConnContext returned nil&#34;</span>)
+			}
+		}
+		tempDelay = <span style="color:#bd93f9">0</span>
+		<span style="color:#6272a4">//新建连接
+</span><span style="color:#6272a4"></span>		c <span style="color:#ff79c6">:=</span> srv.<span style="color:#50fa7b">newConn</span>(rw)
+		c.<span style="color:#50fa7b">setState</span>(c.rwc, StateNew) <span style="color:#6272a4">// before Serve can return
+</span><span style="color:#6272a4"></span>		<span style="color:#6272a4">//启动协程处理连接
+</span><span style="color:#6272a4"></span>		<span style="color:#ff79c6">go</span> c.<span style="color:#50fa7b">serve</span>(connCtx)
+	}
+}
+
+</code></pre></div><h2 id="处理请求">处理请求</h2>
+<p>下面每一个连接将会按照<code>c.server</code>逻辑进行处理，处理代码比较长，本文仅针对核心代码进行分析</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// Serve a new connection.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> (c <span style="color:#ff79c6">*</span>conn) <span style="color:#50fa7b">serve</span>(ctx context.Context) {
+	<span style="color:#6272a4">//..
+</span><span style="color:#6272a4"></span>
+	<span style="color:#ff79c6">for</span> {
+		<span style="color:#6272a4">//读取request信息
+</span><span style="color:#6272a4"></span>		w, err <span style="color:#ff79c6">:=</span> c.<span style="color:#50fa7b">readRequest</span>(ctx)
+		<span style="color:#6272a4">//..
+</span><span style="color:#6272a4"></span>
+		<span style="color:#6272a4">//使用serviceHandler处理http请求
+</span><span style="color:#6272a4"></span>		serverHandler{c.server}.<span style="color:#50fa7b">ServeHTTP</span>(w, w.req)
+		<span style="color:#6272a4">//..
+</span><span style="color:#6272a4"></span>		<span style="color:#6272a4">//处理连接
+</span><span style="color:#6272a4"></span>		
+	}
+}
+
+</code></pre></div><p>细心的小伙伴已经发现了。上述代码是通过<code>serviceHandler</code>的<code>ServeHTTP</code>方法来处理这个http请求的，也就是说HTTP请求的路由和处理逻辑应该就是在这里关联上的。那么接下来我们需要分析一下<code>ServeHTTP</code>方法</p>
+<!-- raw HTML omitted -->
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#6272a4">// serverHandler delegates to either the server&#39;s Handler or
+</span><span style="color:#6272a4">// DefaultServeMux and also handles &#34;OPTIONS *&#34; requests.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">type</span> serverHandler <span style="color:#8be9fd;font-style:italic">struct</span> {
+	srv <span style="color:#ff79c6">*</span>Server
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (sh serverHandler) <span style="color:#50fa7b">ServeHTTP</span>(rw ResponseWriter, req <span style="color:#ff79c6">*</span>Request) {
+	handler <span style="color:#ff79c6">:=</span> sh.srv.Handler
+	<span style="color:#ff79c6">if</span> handler <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		handler = DefaultServeMux
+	}
+	<span style="color:#ff79c6">if</span> req.RequestURI <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;*&#34;</span> <span style="color:#ff79c6">&amp;&amp;</span> req.Method <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;OPTIONS&#34;</span> {
+		handler = globalOptionsHandler{}
+	}
+	handler.<span style="color:#50fa7b">ServeHTTP</span>(rw, req)
+}
+
+</code></pre></div><p>可以看到这里的处理逻辑比较清晰的：</p>
+<ul>
+<li>
+<p>获取server中是否注册了Handler。如果注册了使用注册的Handler。否则使用默认的<code>DefaultServeMux</code>。这部分设计为了可以方便用户自定义路由引擎。</p>
+</li>
+<li>
+<p>同时也定义了&quot;OPTIONS *&rdquo; Handler。</p>
+</li>
+</ul>
+<p>至此，我们从代码入口了解了整个HTTP请求的处理方式，以及HTTP请求和路由引擎绑定的位置。可以总结如下：</p>
+<p>1、在主函数中调用<code>http.ListenAndServe()</code>方法，这个方法会传入监听端口以及一个server handler，这个server handler为<code>nil</code>的时候使用默认的<code>DefaultServeMux</code>引擎。</p>
+<p>2、<code>ListenAndServe</code>方法会监听传入的tcp端口，返回一个连接，然后调用<code>Serve</code>方法处理这个连接</p>
+<p>3、<code>Serve</code>方法中有一个大循环负责Accept连接，每当有一个连接被Accept，就会开启一个协程嗲用<code>serve</code>方法处理。</p>
+<p>4、<code>serve</code>方法会读取这个连接数据，并且使用<code>ServeHTTP</code>方法找到路由引擎，最后使用路由引擎的<code>ServeHTTP</code>方法处理HTTP请求。</p>
+<h1 id="路由引擎">路由引擎</h1>
+<p>这里我们主要分析的是<code>net.Http</code>默认的路由引擎，也就是<code>DefaultServeMux</code>。也就是在我们的<a href="#refer-demo">例子</a>中的<code>http.HandleFunc</code>方法是如何在<a href="#refer-sever-handler">ServeHTTP</a>中被调用的。</p>
+<h2 id="路由注册">路由注册</h2>
+<p>我们首先看看路由是如何注册的，在我们的demo中通过调用<code>http.HandleFunc</code>完成路由的注册。我们可以看看<code>http.HandleFunc</code>的函数定义:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// The HandlerFunc type is an adapter to allow the use of
+</span><span style="color:#6272a4">// ordinary functions as HTTP handlers. If f is a function
+</span><span style="color:#6272a4">// with the appropriate signature, HandlerFunc(f) is a
+</span><span style="color:#6272a4">// Handler that calls f.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">type</span> HandlerFunc <span style="color:#8be9fd;font-style:italic">func</span>(ResponseWriter, <span style="color:#ff79c6">*</span>Request)
+<span style="color:#6272a4">// HandleFunc registers the handler function for the given pattern
+</span><span style="color:#6272a4">// in the DefaultServeMux.
+</span><span style="color:#6272a4">// The documentation for ServeMux explains how patterns are matched.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">HandleFunc</span>(pattern <span style="color:#8be9fd">string</span>, handler <span style="color:#8be9fd;font-style:italic">func</span>(ResponseWriter, <span style="color:#ff79c6">*</span>Request)) {
+	DefaultServeMux.<span style="color:#50fa7b">HandleFunc</span>(pattern, handler)
+}
+<span style="color:#6272a4">// HandleFunc registers the handler function for the given pattern.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> (mux <span style="color:#ff79c6">*</span>ServeMux) <span style="color:#50fa7b">HandleFunc</span>(pattern <span style="color:#8be9fd">string</span>, handler <span style="color:#8be9fd;font-style:italic">func</span>(ResponseWriter, <span style="color:#ff79c6">*</span>Request)) {
+	<span style="color:#ff79c6">if</span> handler <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		<span style="color:#8be9fd;font-style:italic">panic</span>(<span style="color:#f1fa8c">&#34;http: nil handler&#34;</span>)
+	}
+	mux.<span style="color:#50fa7b">Handle</span>(pattern, <span style="color:#50fa7b">HandlerFunc</span>(handler))
+}
+<span style="color:#6272a4">// Handle registers the handler for the given pattern
+</span><span style="color:#6272a4">// in the DefaultServeMux.
+</span><span style="color:#6272a4">// The documentation for ServeMux explains how patterns are matched.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Handle</span>(pattern <span style="color:#8be9fd">string</span>, handler Handler) { DefaultServeMux.<span style="color:#50fa7b">Handle</span>(pattern, handler) }
+</code></pre></div><p><code>HandleFunc</code>处理也比较简单，就是使用<code>DefaultServeMux.HandleFunc</code>进行注册，这种设计也是比较自然的，在不同的框架下面都是使用自身的引擎进行路由注册。因此这个方法在这里表达的意思就是：使用了默认的<code>DefaultServeMux</code>引擎进行注册。</p>
+<p><code>mux</code>的<code>HandleFunc</code>方法中完成实际的注册行为:</p>
+<p>1、判断handler是否为nil</p>
+<p>2、将<code>hanlder</code>进行类型转换为<code>HandlerFunc</code>（函数签名<code>type HandlerFunc func(ResponseWriter, *Request)</code>）,使用 <code>mux.Handle</code>注册。</p>
+<p>mux.Hanlder注册的逻辑就更简单了：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> muxEntry <span style="color:#8be9fd;font-style:italic">struct</span> {
+	h       Handler
+	pattern <span style="color:#8be9fd">string</span>
+}
+<span style="color:#6272a4">// Handle registers the handler for the given pattern.
+</span><span style="color:#6272a4">// If a handler already exists for pattern, Handle panics.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> (mux <span style="color:#ff79c6">*</span>ServeMux) <span style="color:#50fa7b">Handle</span>(pattern <span style="color:#8be9fd">string</span>, handler Handler) {
+	mux.mu.<span style="color:#50fa7b">Lock</span>()
+	<span style="color:#ff79c6">defer</span> mux.mu.<span style="color:#50fa7b">Unlock</span>()
+	<span style="color:#6272a4">//参数检查
+</span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> pattern <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;&#34;</span> {
+		<span style="color:#8be9fd;font-style:italic">panic</span>(<span style="color:#f1fa8c">&#34;http: invalid pattern&#34;</span>)
+	}
+	<span style="color:#ff79c6">if</span> handler <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		<span style="color:#8be9fd;font-style:italic">panic</span>(<span style="color:#f1fa8c">&#34;http: nil handler&#34;</span>)
+	}
+	<span style="color:#ff79c6">if</span> _, exist <span style="color:#ff79c6">:=</span> mux.m[pattern]; exist {
+		<span style="color:#8be9fd;font-style:italic">panic</span>(<span style="color:#f1fa8c">&#34;http: multiple registrations for &#34;</span> <span style="color:#ff79c6">+</span> pattern)
+	}
+
+	<span style="color:#ff79c6">if</span> mux.m <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		mux.m = <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">map</span>[<span style="color:#8be9fd">string</span>]muxEntry)
+	}
+	<span style="color:#6272a4">//通过pattern和handler生成一个entry
+</span><span style="color:#6272a4"></span>	e <span style="color:#ff79c6">:=</span> muxEntry{h: handler, pattern: pattern}
+	mux.m[pattern] = e
+	<span style="color:#ff79c6">if</span> pattern[<span style="color:#8be9fd;font-style:italic">len</span>(pattern)<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>] <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#39;/&#39;</span> {
+		<span style="color:#6272a4">//根据pattern长度进行排序
+</span><span style="color:#6272a4"></span>		mux.es = <span style="color:#50fa7b">appendSorted</span>(mux.es, e)
+	}
+
+	<span style="color:#ff79c6">if</span> pattern[<span style="color:#bd93f9">0</span>] <span style="color:#ff79c6">!=</span> <span style="color:#f1fa8c">&#39;/&#39;</span> {
+		mux.hosts = <span style="color:#ff79c6">true</span>
+	}
+}
+</code></pre></div><p><code>ServerMux</code>是通过<code>muxEntry</code>方式存储handler和pattern，并通过一个map来管理这种映射。</p>
+<h2 id="路由">路由</h2>
+<p>路由表示从一个pattern-&gt;handler的过程，从<code>DefaultMux</code>的注册方式不难发现，是利用map做的映射，因此只能支一些简单的匹配方案。那么请求是如何匹配到Handler的呢？</p>
+<p>从Http Service部分，我们了解到HTTP请求最后是通过<code>handler.ServeHTTP(rw, req)</code>方法来调用接口的。<code>ServeHTTP</code>就是这么一个接口，从语义上来说，就是需要实现路由和处理的功能。所有的路由引擎都必须实现这个接口。下面分析<code>DefaultMux</code>是如何实现的</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// ServeHTTP dispatches the request to the handler whose
+</span><span style="color:#6272a4">// pattern most closely matches the request URL.
+</span><span style="color:#6272a4"></span><span style="color:#8be9fd;font-style:italic">func</span> (mux <span style="color:#ff79c6">*</span>ServeMux) <span style="color:#50fa7b">ServeHTTP</span>(w ResponseWriter, r <span style="color:#ff79c6">*</span>Request) {
+	<span style="color:#ff79c6">if</span> r.RequestURI <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;*&#34;</span> {
+		<span style="color:#ff79c6">if</span> r.<span style="color:#50fa7b">ProtoAtLeast</span>(<span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">1</span>) {
+			w.<span style="color:#50fa7b">Header</span>().<span style="color:#50fa7b">Set</span>(<span style="color:#f1fa8c">&#34;Connection&#34;</span>, <span style="color:#f1fa8c">&#34;close&#34;</span>)
+		}
+		w.<span style="color:#50fa7b">WriteHeader</span>(StatusBadRequest)
+		<span style="color:#ff79c6">return</span>
+	}
+	<span style="color:#6272a4">//从request中解析url，返回handler
+</span><span style="color:#6272a4"></span>	h, _ <span style="color:#ff79c6">:=</span> mux.<span style="color:#50fa7b">Handler</span>(r)
+	<span style="color:#6272a4">//使用handler进行处理
+</span><span style="color:#6272a4"></span>	h.<span style="color:#50fa7b">ServeHTTP</span>(w, r)
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (mux <span style="color:#ff79c6">*</span>ServeMux) <span style="color:#50fa7b">Handler</span>(r <span style="color:#ff79c6">*</span>Request) (h Handler, pattern <span style="color:#8be9fd">string</span>) {
+
+	<span style="color:#6272a4">//...
+</span><span style="color:#6272a4"></span>
+	<span style="color:#ff79c6">return</span> mux.<span style="color:#50fa7b">handler</span>(host, r.URL.Path)
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (mux <span style="color:#ff79c6">*</span>ServeMux) <span style="color:#50fa7b">handler</span>(host, path <span style="color:#8be9fd">string</span>) (h Handler, pattern <span style="color:#8be9fd">string</span>) {
+	mux.mu.<span style="color:#50fa7b">RLock</span>()
+	<span style="color:#ff79c6">defer</span> mux.mu.<span style="color:#50fa7b">RUnlock</span>()
+
+	<span style="color:#6272a4">// Host-specific pattern takes precedence over generic ones
+</span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> mux.hosts {
+		h, pattern = mux.<span style="color:#50fa7b">match</span>(host <span style="color:#ff79c6">+</span> path)
+	}
+	<span style="color:#ff79c6">if</span> h <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		h, pattern = mux.<span style="color:#50fa7b">match</span>(path)
+	}
+	<span style="color:#ff79c6">if</span> h <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		h, pattern = <span style="color:#50fa7b">NotFoundHandler</span>(), <span style="color:#f1fa8c">&#34;&#34;</span>
+	}
+	<span style="color:#ff79c6">return</span>
+}
+</code></pre></div><p>这个过程就比较清晰了。直接从request中获取path，通过path拿到handler，如果path拿不到，则通过前缀匹配获取。整个路由的过程也是十分清晰的。当然也是因为<code>DefaultMux</code>设计是比较简单清晰的原因。</p>
+<p>至此通过分析代码可以理解到整个http server创建，监听，处理过程，并且在处理中巧妙的使用了<code>ServeHTTP</code>接口解耦webserver和路由引擎。</p>
+
+
+                
+
+                <hr>
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2020/05/14/golang/sync-Pool/" data-toggle="tooltip" data-placement="top" title="golang包分析 - sync.Pool">&larr;
+                            Previous Post</a>
+                    </li>
+                    
+                    
+                </ul>
+
+                
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'b424eca02d3fbc93d245',
+    clientSecret: 'c059501056998d07b1fcc22e40ddb19ce3220e82',
+    repo: 'Blog-Comments',
+    owner: 'dengbzh',
+    admin: ['dengbzh'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+
+            </div>
+            
+            <div class="
+                col-lg-11 col-lg-offset-1
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                
+                
+                <section>
+                    <hr class="hidden-sm hidden-xs">
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                        
+                        
+                        
+                        <a href="/tags/golang" title="golang">
+                            golang
+                        </a>
+                        
+                        
+                        
+                        
+                        
+                        
+                    </div>
+                </section>
+                
+
+                
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+                   
+                    
+                    
+                    
+                    
+                    
+
+                    
+
+		    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+            
+            
+            
+                </ul>
+		<p class="copyright text-muted">
+                    Copyright &copy; Mark&#39;s Blog 2020
+                    <br>
+                    <a href="https://themes.gohugo.io/hugo-theme-cleanwhite">CleanWhite Hugo Theme</a> by <a href="https://zhaohuabing.com">Huabing</a> |
+                    <iframe
+                        style="margin-left: 2px; margin-bottom:-5px;"
+                        frameborder="0" scrolling="0" width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=zhaohuabing&repo=hugo-theme-cleanwhite&type=star&count=true" >
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+
+
+
+
+<script>
+    
+    if($('#tag_cloud').length !== 0){
+        async("/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+
+<script>
+    async("https://cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.6/fastclick.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+
+<script>
+    (function(){
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https'){
+       bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else{
+      bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+</script>
+
+
+
+<script>
+    
+    var _baId = '4646b61c8b5071a27dbdac7ac69ba9da';
+
+    
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?" + _baId;
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+
+</body>
+</html>

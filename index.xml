@@ -6,10 +6,19 @@
     <description>Recent content on Mark&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 14 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Jul 2020 00:13:07 +0800</lastBuildDate>
     
 	<atom:link href="https://dengbzh.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>golang包分析 - net.Http</title>
+      <link>https://dengbzh.github.io/2020/07/06/golang/net-http/</link>
+      <pubDate>Mon, 06 Jul 2020 00:13:07 +0800</pubDate>
+      
+      <guid>https://dengbzh.github.io/2020/07/06/golang/net-http/</guid>
+      <description>golang是一个具有高效开发速度的一门语言，这不仅体现在golang自身的语言设计，同样体现在golang的包设计。net.http包就是</description>
+    </item>
     
     <item>
       <title>golang包分析 - sync.Pool</title>
